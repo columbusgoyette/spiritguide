@@ -17,7 +17,7 @@
             align-items: center;
             justify-content: space-between;
         }
-        
+
         .container {
             display: flex;
             flex-direction: column;
@@ -27,20 +27,20 @@
             text-align: center;
             padding: 20px;
         }
-        
+
         h1 {
             font-size: 2.2rem;
             margin-bottom: 10px;
             text-shadow: 0 0 10px rgba(148, 0, 211, 0.7);
         }
-        
+
         .subtitle {
             font-size: 1.2rem;
             margin-bottom: 30px;
             max-width: 500px;
             opacity: 0.9;
         }
-        
+
         .captcha-box {
             background: rgba(45, 11, 90, 0.6);
             border-radius: 20px;
@@ -50,7 +50,7 @@
             max-width: 400px;
             width: 100%;
         }
-        
+
         .captcha-btn {
             background: linear-gradient(45deg, #9d50bb, #6e48aa);
             color: white;
@@ -69,22 +69,22 @@
             margin: 0 auto;
             animation: pulse 2s infinite;
         }
-        
+
         .captcha-btn:hover {
             transform: scale(1.05);
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
         }
-        
+
         .captcha-btn:active {
             transform: scale(0.98);
         }
-        
+
         .status-text {
             margin-top: 20px;
             font-size: 1rem;
             min-height: 24px;
         }
-        
+
         .footer {
             background: rgba(26, 9, 51, 0.85);
             width: 100%;
@@ -93,17 +93,17 @@
             text-align: center;
             border-top: 1px solid #4b0082;
         }
-        
+
         .requisites {
             line-height: 1.6;
             max-width: 800px;
             margin: 0 auto;
         }
-        
+
         .hidden {
             display: none;
         }
-        
+
         .spinner {
             border: 4px solid rgba(255, 255, 255, 0.3);
             border-radius: 50%;
@@ -113,18 +113,18 @@
             animation: spin 1s linear infinite;
             margin: 20px auto;
         }
-        
+
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        
+
         @keyframes pulse {
             0% { box-shadow: 0 0 0 0 rgba(157, 80, 187, 0.7); }
             70% { box-shadow: 0 0 0 15px rgba(157, 80, 187, 0); }
             100% { box-shadow: 0 0 0 0 rgba(157, 80, 187, 0); }
         }
-        
+
         @media (max-width: 480px) {
             h1 { font-size: 1.8rem; }
             .captcha-btn { width: 120px; height: 120px; }
@@ -137,7 +137,7 @@
             <h1>Spirit Guide</h1>
             <p class="subtitle">Ваш персональный помощник в мире астрологии и тотемных животных</p>
         </div>
-        
+
         <div class="captcha-box">
             <p>Подтвердите, что вы не робот:</p>
             <button id="captchaBtn" class="captcha-btn">Нажми меня</button>
@@ -145,7 +145,7 @@
             <div id="spinner" class="spinner hidden"></div>
         </div>
     </div>
-    
+
     <div id="footer" class="footer">
         <div class="requisites">
             <p>Контакты: Гордеев Е.В., тел. +79204303595</p>
@@ -161,83 +161,58 @@
             const statusText = document.getElementById('statusText');
             const spinner = document.getElementById('spinner');
             const footer = document.getElementById('footer');
-            
-            // Обработчик капчи
-            captchaBtn.addEventListener('click', function() {
-                // Показать статус проверки
-                captchaBtn.disabled = true;
-                captchaBtn.textContent = 'Проверяем...';
-                statusText.textContent = 'Идентификация пользователя...';
+            const urlParams = new URLSearchParams(window.location.search);
+            const hasAdsParam = urlParams.get('utm_term') === 'ads';
+
+            function redirectToTelegram(clientid = null) {
+                const params = clientid ? new URLSearchParams({start: clientid}) : '';
+                const tgAppLink = `tg://resolve?domain=spiritguidetgbot${clientid ? '&' + params : ''}`;
+                const tgWebLink = `https://t.me/spiritguidetgbot${clientid ? '?' + params : ''}`;
+
+                window.location.href = tgAppLink;
+                setTimeout(() => {
+                    window.location.replace(tgWebLink);
+                }, 50);
+            }
+
+            function getCIDAndRedirect() {
+                ym(102561957, 'getClientID', function(clientid) {
+                    redirectToTelegram(clientid || Date.now().toString());
+                });
+            }
+
+            if (hasAdsParam) {
                 spinner.classList.remove('hidden');
-                
-                // Скрыть реквизиты
-                footer.classList.add('hidden');
-                
-                // Запускаем оригинальный скрипт редиректа после небольшой задержки
-                setTimeout(executeRedirectScript, 500);
-            });
-            
-            // Ваш оригинальный скрипт редиректа
-            function executeRedirectScript() {
-                // Инициализация метрики (как в вашем файле)
+                statusText.textContent = 'Переход в Telegram...';
+
                 (function(m,e,t,r,i,k,a){
                     m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
                     k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
                 })(window,document,"script","https://mc.yandex.ru/metrika/tag.js","ym");
-                
+
                 ym(102561957,"init",{
                     defer: true,
                     trackLinks: true,
                     webvisor: true,
                     clickmap: true
                 });
-                
-                // 1. Принудительно отправляем событие просмотра страницы
+
                 ym(102561957, 'hit', window.location.href, {
-                    callback: function() {
-                        // 2. После отправки данных получаем ClientID
-                        getCID(function(clientid) {
-                            statusText.textContent = 'Перенаправляем в Telegram...';
-                            // 3. Перенаправляем в Telegram
-                            redirectToTelegram(clientid);
-                        });
-                    },
+                    callback: () => getCIDAndRedirect(),
                     ctx: this
                 });
-                
-                // Функция получения ClientID
-                function getCID(callback) {
-                    // Пробуем получить из куки
-                    const cookieMatch = document.cookie.match(/_ym_uid=([^;]*)/);
-                    if(cookieMatch) {
-                        return callback(cookieMatch[1]);
-                    }
-                    
-                    // Если куки нет, получаем через API
-                    ym(102561957, 'getClientID', function(clientid) {
-                        callback(clientid || Date.now().toString());
-                    });
-                }
-                
-                // Функция перенаправления в Telegram
-                function redirectToTelegram(clientid) {
-                    const params = new URLSearchParams({start: clientid});
-                    const tgAppLink = `tg://resolve?domain=spiritguidetgbot&${params}`;
-                    const tgWebLink = `https://t.me/spiritguidetgbot?${params}`;
 
-                    // Пытаемся открыть в приложении
-                    window.location.href = tgAppLink;
-                    
-                    // Фолбэк через 50мс
-                    setTimeout(() => {
-                        window.location.replace(tgWebLink);
-                    }, 50);
-                }
-                
-                // Защита на случай проблем с метрикой
-                setTimeout(() => {
-                    getCID(redirectToTelegram);
-                }, 1000);
+                setTimeout(getCIDAndRedirect, 1000);
+            } else {
+                captchaBtn.addEventListener('click', function() {
+                    captchaBtn.disabled = true;
+                    captchaBtn.textContent = 'Проверяем...';
+                    statusText.textContent = 'Идентификация пользователя...';
+                    spinner.classList.remove('hidden');
+                    footer.classList.add('hidden');
+
+                    setTimeout(() => redirectToTelegram(), 500);
+                });
             }
         });
     </script>
